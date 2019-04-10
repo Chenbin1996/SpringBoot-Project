@@ -1,0 +1,156 @@
+<#import "/base/baseUrl.html" as baseUrl>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- 页面通用jsCSS -->
+    <#include "/base/baseJs.html"/>
+</head>
+<body>
+<div style="padding: 20px;">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md4">
+            <div class="layui-card">
+                <table id="roleMenuTable" lay-filter="roleMenuTable" class="layui-hide"></table>
+            </div>
+        </div>
+        <div class="layui-col-md4">
+            <div class="layui-card">
+                <div class="layui-card-header">正在操作的角色：<span id="roleName"></span></div>
+                <div class="layui-card-body">
+                    <ul id="roleTable" class="ztree"/>
+                </div>
+                <div class="layui-card-body">
+                    <button class="layui-btn" id="add">授权</button>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md4">
+            <div class="layui-card">
+                <div class="layui-card-header">当前角色拥有的权限如下：</div>
+                <div class="layui-card-body">
+                    <ul id="roleTree" class="ztree"/>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var roleId=null;
+    var menuIds=[];
+    var newMenuIds=[];
+    var temp=[];
+    var table;
+    var roleName=null;
+    layui.use(['table', 'form'], function () {
+    table = layui.table;
+    var form = layui.form;
+    table.render({
+        elem: '#roleMenuTable'
+        , url: '${domain}/role/list?status=1'
+        , response: {
+            statusCode: 200 //规定成功的状态码，默认：0
+        }
+        , request: {
+            pageName: 'pageNumber' //页码的参数名称，默认：page
+            , limitName: 'pageSize' //每页数据量的参数名，默认：limit
+        }
+        , parseData: function (res) { //res 即为原始返回的数据
+            return {
+                "code": res.code, //解析接口状态
+                "msg": res.msg, //解析提示文本
+                "count": res.data.total, //解析数据长度
+                "data": res.data.records //解析数据列表
+            };
+        }
+        , cols: [[
+             {type: 'numbers'}
+            , {field: 'name', title: '角色名'}
+        ]]
+    });
+
+
+        //监听单元格事件(单击单元格)
+        table.on('row(roleMenuTable)', function(obj){
+            var data = obj.data;
+            roleName=data.name;
+            $('#roleName').html(roleName);
+            roleId=data.id;
+            //alert(data.id);
+            $.get("${domain}/menu/findByTree?roleId="+data.id, function (data, status) {
+                $.fn.zTree.init($("#roleTable"), setting, data.data);
+            });
+            $.get("${domain}/roleMenu/findByRoleId?roleId="+data.id, function (data, status) {
+                $.fn.zTree.init($("#roleTree"), setting2, data.data);
+            });
+        });
+
+        $(document).on('click','#add',function(){
+            /*alert(roleId);
+            alert(menuIds);*/
+            $.post("${domain}/roleMenu/addRoleMenu?roleId="+roleId+"&menuIds="+menuIds,function (data) {
+                $.get("${domain}/roleMenu/findByRoleId?roleId="+roleId, function (data, status) {
+                    $.fn.zTree.init($("#roleTree"), setting2, data.data);
+                });
+            })
+
+
+        })
+
+
+})
+
+
+    var setting = {
+        check: {
+            enable: true,
+            autoCheckTrigger: true,
+            chkboxType: { "Y": "ps", "N": "ps" }
+        },
+        view:{
+            selectedMulti:true,
+            showLine:true,
+            showIcon:true
+        },
+        data:{
+            simpleData: {enable: true},
+            keep: {parent: true}
+        },
+
+        callback: {
+            onCheck: zTreeOnCheck
+        }
+
+    };
+
+    var setting2 = {
+        view:{
+            selectedMulti:true,
+            showLine:true,
+            showIcon:true
+        },
+        data:{
+            simpleData: {enable: true},
+            keep: {parent: true}
+        },
+
+    };
+
+    function zTreeOnCheck(event, treeId, treeNode) {
+        var treeObj = $.fn.zTree.getZTreeObj("roleTable");
+        temp = treeObj.getCheckedNodes(true);
+        menuIds=[];
+        for(var menu in temp){
+            menuIds.push(temp[menu].id);
+        }
+
+
+    }
+
+
+
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<#import "/base/baseUrl.html" as baseUrl>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>修改部门</title>
+    <!-- 页面通用jsCSS -->
+    <#include "/base/baseJs.html"/>
+    <script src="<@baseUrl.static />/layui/layui.js"></script>
+</head>
+<body>
+<div class="er-content">
+    <fieldset class="layui-elem-field layui-field-title" style="">
+        <legend>修改部门</legend>
+    </fieldset>
+    <form class="layui-form layui-form-pane" action="" id="form">
+        <input type="text" name="id" value="${departmentDTOS.id}" lay-verify="id" autocomplete="off" class="layui-input" style="display: none">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">部门名称</label>
+                <div class="layui-input-block">
+                    <input type="text" id="name" name="name" value="${departmentDTOS.name}" required lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">部门简称</label>
+                <div class="layui-input-block">
+                    <input type="text"  name="shortName" value="${departmentDTOS.shortName}" required lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">部门等级</label>
+                <div class="layui-input-block">
+                    <input type="text"  name="grade" value="${departmentDTOS.grade}" required lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">父级部门</label>
+            <div class="layui-input-block">
+                <select name="pid" lay-filter="selectRole"  lay-search="">
+                    <option value="">选择部门</option>
+                    <#list departments as department>
+                        <#if (departmentDTOS.pname!'') = department.name>
+                            <option value="${department.id}" selected>${department.name}</option>
+                        <#else >
+                            <option value="${department.id}" >${department.name}</option>
+                        </#if>
+                    </#list>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">主要负责人</label>
+            <div class="layui-input-block">
+                <select name="primaryPerson"  lay-filter="selectRole"  lay-search="">
+                    <option value="">选择负责人</option>
+                    <#list users as user>
+                        <#if (departmentDTOS.primaryName!'') = user.name>
+                            <option value="${user.id}" selected>${user.name}</option>
+                        <#else >
+                            <option value="${user.id}" >${user.name}</option>
+                        </#if>
+                    </#list>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">副负责人</label>
+            <div class="layui-input-block">
+                <select name="deputyPerson" lay-filter="selectRole" id="selectRoleSelect" lay-search="">
+                    <option value="">选择负责人</option>
+                    <#list users as user>
+                        <#if (departmentDTOS.deputyName!'') = user.name>
+                            <option value="${user.id}" selected>${user.name}</option>
+                        <#else >
+                            <option value="${user.id}" >${user.name}</option>
+                        </#if>
+                    </#list>
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">备注</label>
+                <div class="layui-input-block">
+                    <input type="text"  name="remark" value="${departmentDTOS.remark}" required lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="er-btn-div">
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="fromSubmit">保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" onclick="top.window.layer.closeAll()">取消</button>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    layui.use(['form', 'layedit', 'laydate'], function () {
+        var form = layui.form
+            , layer = layui.layer;
+        //监听提交
+        form.on('submit(fromSubmit)', function (data) {
+            /* 加载层 */
+            debugger;
+            top.window.layer.load(2);
+            $.post_http("${domain}/department/update", data.field, function (data, status) {
+                if (data.code != 200) {
+                    top.window.layer.alert('修改部门失败' + data.msg, {icon: 5});
+                } else {
+                    top.window.layer.alert('修改部门成功', {
+                        icon: 1, yes: function (index, layero) {
+                            $.reloadParentDom();
+                            /* 关闭弹框 */
+                            top.window.layer.closeAll();
+                        }
+                    })
+                }
+            });
+            return false;
+        });
+    });
+
+</script>
+</body>
+</html>

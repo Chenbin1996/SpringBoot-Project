@@ -1,0 +1,185 @@
+<#import "/base/baseUrl.html" as baseUrl>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>自定义分页 - 数据表格</title>
+    <!-- 页面通用jsCSS -->
+    <#include "/base/baseJs.html"/>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="<@baseUrl.static />/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="<@baseUrl.static />/style/admin.css" media="all">
+    <link rel="stylesheet" href="<@baseUrl.static />/modules/treetable.css" media="all">
+    <script src="<@baseUrl.static />/layui/layui.js"></script>
+    <script src="<@baseUrl.static />/js/jquery-2.2.4.js"></script>
+    <script src="<@baseUrl.static />/util/date-format.js"></script>
+    <script src="<@baseUrl.static />/util/boxutil.js"></script>
+</head>
+<body>
+
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">ID</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="id" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">用户名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="username" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">邮箱</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="email" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">性别</label>
+                    <div class="layui-input-block">
+                        <select name="sex">
+                            <option value="0">不限</option>
+                            <option value="1">男</option>
+                            <option value="2">女</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn layuiadmin-btn-useradmin" lay-submit lay-filter="LAY-user-front-search">
+                        <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-card-body">
+            <div style="padding-bottom: 10px;">
+                <button class="layui-btn layuiadmin-btn-useradmin" data-type="add" onclick="addMenuFunc()">添加</button>
+            </div>
+            <table id="menuTable" class="layui-table" lay-filter="menuTable"></table>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- 操作列 -->
+<script type="text/html" id="oper-col">
+    <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>
+</script>
+
+<script>
+    layui.config({
+        base: '<@baseUrl.static />/'
+    }).extend({
+        treetable: 'modules/treetable'
+    }).use(['layer', 'table', 'treetable'], function () {
+        var $ = layui.jquery;
+        var table = layui.table;
+        var layer = layui.layer;
+        var treetable = layui.treetable;
+        // 渲染表格
+        var renderTable = function () {
+            layer.load(2);
+            treetable.render({
+                treeColIndex: 1,
+                treeSpid: -1,
+                treeIdName: 'id',
+                treePidName: 'pid',
+                treeDefaultClose: true,
+                treeLinkage: false,
+                elem: '#menuTable',
+                url: '${domain}/menu/getMenuList',
+                page: false,
+                cols: [[
+                    {type: 'numbers'},
+                    {field: 'name', title: '标题'},
+                    {field: 'icon', title: '图标'},
+                    {field: 'path', title: '路径'},
+                    {field: 'boolIsleaf', title: '类型',templet:function (item) {
+                            console.log(item);
+                            return item.boolIsleaf ? "叶子":"非叶子" ;
+                        }},
+                    {field: 'createTime', title: '创建时间',templet:function (item) {
+                            return $.formatDate(item.createTime,"yyyy-MM-dd HH:mm") ;
+                        }},
+                    {templet: '#oper-col', title: '操作'}
+                ]],
+                done: function () {
+                    layer.closeAll('loading');
+                }
+            });
+        };
+        renderTable();
+        $('#btn-expand').click(function () {
+            treetable.expandAll('#menuTable');
+        });
+
+        $('#btn-fold').click(function () {
+            treetable.foldAll('#menuTable');
+        });
+
+        $('#btn-refresh').click(function () {
+            renderTable();
+        });
+        //监听工具条
+        table.on('tool(menuTable)', function (obj) {
+            var data = obj.data;
+            var layEvent = obj.event;
+            if (layEvent === 'del') {
+                removeMenuFunc(data.id);
+            } else if (layEvent === 'edit') {
+                editMenuFunc(data.id);
+                // layer.msg('修改' + data.id);
+            }
+        });
+    });
+    function removeMenuFunc(id) {
+        top.window.layer.alert('您确定删除该菜单吗？', {
+            skin: 'layui-layer-lan' //样式类名
+            ,closeBtn: 0
+            ,btn:['确定','取消']
+        }, function(){
+            $.post_http("${domain}/menu/removeMenuHandle",{id:id},function (data,status) {
+                if(data.code!=200){
+                    top.window.layer.alert('删除菜单失败:'+data.message, {icon: 5})
+                }else {
+                    top.window.layer.alert('删除菜单成功', {
+                        icon: 1, yes: function (index, layero) {
+                            $.reloadParentDom();
+                            /* 关闭弹框 */
+                            top.window.layer.closeAll();
+                        }
+                    })
+                }
+            });
+        });
+    }
+    function editMenuFunc(id) {
+        top.window.layer.open({
+            skin: 'layui-layer-lan'
+            ,title:"修改数据"
+            ,type: 2
+            ,area: [(top.window.innerWidth*0.45).toString(), (top.window.innerHeight*0.75).toString()]
+            ,content:"${domain}/menu/editMenuUI?id="+id
+        });
+    }
+    function addMenuFunc() {
+        top.window.layer.open({
+            skin: 'layui-layer-lan'
+            ,title:"添加数据"
+            ,type: 2
+            ,area: [(top.window.innerWidth*0.45).toString(), (top.window.innerHeight*0.75).toString()]
+            ,content:"${domain}/menu/addMenuUI"
+        });
+    }
+</script>
+</body>
+</html>

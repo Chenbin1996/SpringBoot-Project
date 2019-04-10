@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruxuanwo.template.mapper.SysUserMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.ruxuanwo.template.domain.SysUser">
+        <id column="ID" property="id" />
+        <result column="NAME" property="name" />
+        <result column="login_name" property="loginName" />
+        <result column="pass_word" property="passWord" />
+        <result column="phone_number" property="phoneNumber" />
+        <result column="email" property="email" />
+        <result column="create_time" property="createTime" />
+        <result column="login_time" property="loginTime" />
+        <result column="login_count" property="loginCount" />
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="com.ruxuanwo.template.dto.SysUserDTO" extends="BaseResultMap">
+        <result column="department_name" property="departmentName" />
+        <result column="role_name" property="roleName" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ID, NAME, login_name, pass_word, phone_number, email, create_time, login_time,status, login_count
+    </sql>
+    <select id="selectUserList" resultMap="DtoResultMap">
+
+        SELECT
+          u.*,
+          s.department_name,
+          w.role_name
+        FROM
+          sys_user u
+        LEFT JOIN (
+            SELECT
+              ud.user_id,
+              GROUP_CONCAT(
+                DISTINCT d. NAME SEPARATOR '；'
+              ) AS department_name
+            FROM
+              sys_user_department ud,
+              sys_department d
+            WHERE
+              d.id = ud.department_id
+            GROUP BY
+              ud.user_id
+        ) AS s ON u.id = s.user_id
+        LEFT JOIN (
+            SELECT
+              ur.user_id,
+              GROUP_CONCAT(
+                DISTINCT r.`name` SEPARATOR '；'
+              ) AS role_name
+            FROM
+              sys_user_role ur,
+              sys_role r
+            WHERE
+              r.id = ur.role_id
+            GROUP BY
+              ur.user_id
+        ) AS w ON u.id = w.user_id
+        <where>
+            <if test="entity.name != null and entity.name != ''">AND u.name LIKE concat("%",#{entity.name},"%")</if>
+            <if test="entity.loginName != null and entity.loginName != ''">AND u.login_name LIKE concat("%",#{entity.loginName},"%")</if>
+            <if test="entity.phoneNumber != null and entity.phoneNumber != ''">AND u.phone_number LIKE concat("%",#{entity.phoneNumber},"%")</if>
+            <if test="entity.email != null and entity.email != ''">AND u.email LIKE concat("%",#{entity.email},"%")</if>
+            <if test="entity.status != null and entity.status != ''">AND u.status = #{entity.status}</if>
+        </where>
+    </select>
+</mapper>

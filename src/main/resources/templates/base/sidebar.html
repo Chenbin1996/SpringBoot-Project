@@ -1,0 +1,88 @@
+<div class="tpl-left-nav tpl-left-nav-hover">
+    <div class="tpl-left-nav-title">
+        功能列表
+    </div>
+    <div class="tpl-left-nav-list">
+        <ul class="tpl-left-nav-menu">
+
+        </ul>
+    </div>
+</div>
+<script>
+    // ==========================
+    // 侧边导航下拉列表
+    // ==========================
+    /*$('.tpl-left-nav-link-list').on('click', function() {
+        $(this).siblings('.tpl-left-nav-sub-menu').slideToggle(80)
+            .end()
+            .find('.tpl-left-nav-more-ico').toggleClass('tpl-left-nav-more-ico-rotate');
+    });*/
+    $(function() {
+        $.get("/tMenu/getMenuTreeNodes", function(data){
+            var result = data.data;
+            var htmlMenuDom = "";
+            for(var i = 0 ; i<result.length; i++){
+                var treeInfo = result[i];
+                htmlMenuDom += "<li class=\"tpl-left-nav-item\">";
+                if(i==0){
+                    htmlMenuDom += "<a href=\"javascript:;\" menuPath=\""+isMenuPath(treeInfo.path)+"\" class=\"nav-link active\">";
+                }else {
+                    htmlMenuDom += "<a href=\"javascript:;\" menuPath=\""+isMenuPath(treeInfo.path)+"\" class=\"nav-link tpl-left-nav-link-list\">";
+                }
+                htmlMenuDom += "<i class=\""+treeInfo.icon+"\"></i>";
+                htmlMenuDom += "<span>"+treeInfo.title+"</span>";
+                var treeMenuNodes = treeInfo.nodes;
+                if(treeMenuNodes.length>0){
+                    htmlMenuDom += "<i class=\"am-icon-angle-right tpl-left-nav-more-ico am-fr am-margin-right\"></i>";
+                    htmlMenuDom += "</a>";
+                    htmlMenuDom+="<ul class=\"tpl-left-nav-sub-menu\"><li>";
+                    for(var j = 0; j<treeMenuNodes.length;j++){
+                        var node = treeMenuNodes[j];
+                        htmlMenuDom+="<a href=\"javascript:;\" class=\"child-menu\" menuPath=\""+isMenuPath(node.path)+"\">";
+                        htmlMenuDom+="<i class=\"am-icon-angle-right\"></i>";
+                        htmlMenuDom+="<span>"+node.title+"</span></a>";
+                    }
+                    htmlMenuDom+="</li></ul></li>"
+                }else {
+                    htmlMenuDom += "</a></li>";
+                }
+                /* 显示该功能小红点+数字 */
+                /*<i class="tpl-left-nav-content tpl-badge-danger">12</i>*/
+            }
+            $(".tpl-left-nav-menu").append(htmlMenuDom);
+            /* 重新绑定点击展开事件 */
+            $('.tpl-left-nav-link-list').on('click', function() {
+                $(this).siblings('.tpl-left-nav-sub-menu').slideToggle(80)
+                    .end()
+                    .find('.tpl-left-nav-more-ico').toggleClass('tpl-left-nav-more-ico-rotate');
+                var thisHref = $(this).attr("menuPath");
+                if( thisHref != "" &&thisHref != "#"){
+                    $("a.active").removeClass("active");
+                    $(this).addClass("active");
+                    switchIframe(thisHref);
+                }
+            });
+            /* 绑定子节点点击事件 */
+            $('.child-menu').on('click', function() {
+                var thisHref = $(this).attr("menuPath");
+                if( thisHref != "" &&thisHref != "#"){
+                    $("a.active").removeClass("active");
+                    $(this).parent().parent().siblings("a").addClass("active");
+                    $(this).addClass("active");
+                    switchIframe(thisHref)
+                }
+            });
+        });
+    });
+    /* 切换Iframe地址 */
+    function switchIframe(path) {
+        $("#content-iframe").attr("src",path);
+    }
+    function isMenuPath(path) {
+        if(path == "" || path == null ){
+            return "#";
+        }else {
+            return path;
+        }
+    }
+</script>

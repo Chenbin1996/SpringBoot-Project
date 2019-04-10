@@ -1,0 +1,44 @@
+.er-content {
+    margin: 3% 5% 12% 2%;
+    padding: 4%;
+    background: white;
+    border-radius: 5px;
+}
+
+.er-btn-div {
+    position: fixed;
+    width: 94%;
+    height: 6%;
+    background: #4776dbad;
+    text-align: center;
+    padding: 3% 3% 2%;
+    bottom: 0;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    left: 0;
+    z-index: 99999;
+}
+
+/*
+.er-btn-div button{
+    border-radius: 5px;
+}*/
+
+/*  标签 CSS Start  */
+.my-tag {
+    border: 1px solid #666;
+    padding: 0 25px 0 10px;
+    border-radius: 10px;
+    position: relative;
+}
+.close-tag{
+    /*background: url("./res/x.png") 100% ;*/
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    right: 5px;
+}
+
+/*  标签 CSS End  */

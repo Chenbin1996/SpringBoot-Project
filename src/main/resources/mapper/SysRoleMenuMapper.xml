@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruxuanwo.template.mapper.SysRoleMenuMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.ruxuanwo.template.domain.SysRoleMenu">
+        <id column="ID" property="id"/>
+        <result column="role_id" property="roleId"/>
+        <result column="menu_id" property="menuId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="create_user" property="createUser"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ID, role_id, menu_id, create_time
+    </sql>
+
+    <select id="findByRoleId" resultType="com.ruxuanwo.template.dto.TreeNode">
+                 SELECT
+        m.id,
+        m.name AS name,
+        m.pid AS pId
+        FROM
+        sys_menu m,
+        sys_role_menu r
+        WHERE
+        m.id=r.menu_id
+        AND
+        r.role_id=#{roleId}
+    </select>
+</mapper>

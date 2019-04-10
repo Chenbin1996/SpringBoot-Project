@@ -1,0 +1,160 @@
+<#import "/base/baseUrl.html" as baseUrl>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>系统登录</title>
+    <!-- 页面通用jsCSS -->
+    <#include "/base/baseJs.html"/>
+    <!--图标样式-->
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.2/css/all.min.css'>
+    <link rel="stylesheet" href="<@baseUrl.static />/style/style.css" media="all">
+</head>
+
+<body>
+<div class="container" id="container">
+    <div class="form-container sign-up-container">
+        <form action="#">
+            <h1>手机验证码登录</h1>
+            <div class="social-container">
+
+            </div>
+            <input type="tel" placeholder="手机号码" />
+            <div class="form-item">
+                <input type="text" placeholder="手机验证码" maxlength="4" autocomplete="off" />
+                <img src="https://www.oschina.net/action/user/captcha"/>
+            </div>
+            <br>
+            <button>登录</button>
+        </form>
+    </div>
+    <div class="form-container sign-in-container">
+        <form>
+            <h1>账号密码登录</h1>
+            <div class="social-container">
+
+            </div>
+            <input type="text" name="loginName" id="loginName" placeholder="账号" />
+            <input type="password" name="passWord" id="passWord" placeholder="密码" />
+            <div class="form-item">
+                <input type="text" name="imageCode" id="imageCode" placeholder="图片验证码" maxlength="4" autocomplete="off" />
+                <img id="imgCode" src="" onclick="getImageCode()"/>
+            </div>
+            <br>
+            <span>忘记密码请联系管理员。</span></br>
+            <button id="loginButton" type="button" onclick="login()">登录</button>
+        </form>
+    </div>
+    <div class="overlay-container">
+        <div class="overlay">
+            <div class="overlay-panel overlay-left">
+                <h1>欢迎回来！</h1>
+                <p>请您先登录的个人信息，进行操作。</p>
+                <button class="ghost" id="signIn">登录</button>
+            </div>
+            <div class="overlay-panel overlay-right">
+                <h1>你好朋友！</h1>
+                <p>这边可以进行手机验证码快捷登录。</p>
+                <button class="ghost" id="signUp">验证码登录</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+    var layer;
+    layui.use( 'layer', function () {
+        layer = layui.layer;
+    });
+    //控制动画
+    const signUpButton = document.getElementById('signUp');
+    const signInButton = document.getElementById('signIn');
+    const container = document.getElementById('container');
+    signUpButton.addEventListener('click', () => {
+        container.classList.add("right-panel-active");
+    });
+    signInButton.addEventListener('click', () => {
+        container.classList.remove("right-panel-active");
+    });
+
+    //生成规则UUID，做前端唯一标识
+    var uuid = function () {
+        var len = 32;//32长度
+        var radix = 16;//16进制
+        var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+        var uuid = [], i;
+        radix = radix || chars.length;
+        if (len) {
+            for (i = 0; i < len; i++) {
+                uuid[i] = chars[0 | Math.random() * radix];
+            }
+        } else {
+            var r;
+            uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';
+            uuid[14] = '4';
+            for (i = 0; i < 36; i++) {
+                if (!uuid[i]) {
+                    r = 0 | Math.random() * 16;
+                    uuid[i] = chars[(i == 19) ? (r & 0x3) | 0x8 : r];
+                }
+            }
+        }
+        return uuid.join('');
+    };
+
+    //一次请求生成一次标识
+    var paramsUUID = uuid();
+
+    //初始化图片验证码，带前端唯一标识
+    document.getElementById("imgCode").src= "${domain}/login/getImageCode?imageCodeId=" + paramsUUID;
+    //点击图片验证码后刷新（加date作用在于更新url，相同Url页面不刷新）
+    function getImageCode(){
+        document.getElementById("imgCode").src= "${domain}/login/getImageCode?imageCodeId=" + paramsUUID + '&date=' + new Date().getSeconds();
+    }
+    //登录方法，请求后台
+    function login() {
+        var loginName = $('#loginName').val();
+        var passWord = $('#passWord').val();
+        var imageCode = $('#imageCode').val();
+        if (!loginName){
+           layer.alert('请输入账号', {icon: 5});
+           return false;
+        }
+        if (!passWord) {
+           layer.alert('请输入密码', {icon: 5});
+           return false;
+        }
+        if (!imageCode || imageCode.length > 4) {
+            layer.alert('请输入正确的验证码', {icon: 5});
+            return false;
+        }
+        $.post_http(
+            "${domain}/login/login",
+            {
+                loginName: loginName,
+                passWord: passWord,
+                imageCode: imageCode,
+                imageCodeId: paramsUUID
+            }, function (data) {
+                if (data.code != 101){
+                    layer.alert(data.msg, {icon: 5});
+                    getImageCode();
+                    return false;
+                }
+        });
+    }
+
+    //回车时，默认是登陆
+    function onkeydown() {
+        var e = event || window.event;
+        if(e && e.keyCode == 13) {
+            login();
+        }
+    }
+
+    document.onkeydown=onkeydown;
+
+
+
+</script>
+</body>
+</html>

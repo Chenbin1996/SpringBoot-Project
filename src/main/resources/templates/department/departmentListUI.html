@@ -1,0 +1,236 @@
+<#import "/base/baseUrl.html" as baseUrl>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- 页面通用jsCSS -->
+    <#include "/base/baseJs.html"/>
+</head>
+<body>
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md2">
+            <div class="layui-card">
+                <ul id="departmentTree" class="ztree"/>
+            </div>
+        </div>
+        <div class="layui-col-md10">
+            <div class="layui-card">
+                <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">部门名称</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="name" id="name" placeholder="请输入" autocomplete="off"
+                                       class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">父级部门</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="pname" id="pname" placeholder="请输入" autocomplete="off"
+                                       class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <button class="layui-btn layuiadmin-btn-useradmin" lay-submit
+                                    lay-filter="departmentTableSearch">
+                                <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                            </button>
+
+                            <button class="layui-btn layuiadmin-btn-useradmin" id="add" lay-event="add">新增</button>
+
+
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-card-body">
+                    <table id="departmentTable" lay-filter="departmentTable" class="layui-hide"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 操作列 -->
+<script type="text/html" id="oper-col">
+    <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit"><i
+                class="layui-icon layui-icon-edit"></i>修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i
+                class="layui-icon layui-icon-delete"></i>删除</a>
+</script>
+<script type="text/html" id="statusHandel">
+    {{#  if(d.status == '1'){ }}
+    <input type="checkbox" data-id="{{d.id}}" lay-filter="switchStatus" name="departmentStatus" checked
+           lay-skin="switch" lay-text="正常|失效">
+    {{# }else{  }}
+    <input type="checkbox" data-id="{{d.id}}" lay-filter="switchStatus" name="departmentStatus"
+           lay-skin="switch" lay-text="正常|失效">
+    {{# } }}
+</script>
+<script>
+    var table;
+    var pid = 0;
+
+    function load(pid, name, pname) {
+        layui.use(['table', 'form'], function () {
+            table = layui.table;
+            var form = layui.form;
+            table.render({
+                elem: '#departmentTable'
+                , url: '${domain}/department/selectByPid'
+                , where: {pid: pid, name: name, pname: pname}
+                , response: {
+                    statusCode: 200 //规定成功的状态码，默认：0
+                }
+                , request: {
+                    pageName: 'pageNumber' //页码的参数名称，默认：page
+                    , limitName: 'pageSize' //每页数据量的参数名，默认：limit
+                }
+                , parseData: function (res) { //res 即为原始返回的数据
+                    return {
+                        "code": res.code, //解析接口状态
+                        "msg": res.msg, //解析提示文本
+                        "count": res.data.total, //解析数据长度
+                        "data": res.data.records //解析数据列表
+                    };
+                }
+                , cols: [[
+                    {type: 'numbers'}
+                    , {field: 'name', title: '部门名称'}
+                    , {field: 'shortName', title: '部门简称'}
+                    , {field: 'grade', title: '部门等级'}
+                    , {field: 'pname', title: '父级部门'}
+                    , {field: 'status', title: '部门状态', toolbar: "#statusHandel"}
+                    , {field: 'primaryName', title: '主要负责人'}
+                    , {field: 'deputyName', title: '副负责人'}
+                    , {field: 'remark', title: '备注'}
+                    , {field: 'createTime', title: '创建时间'}
+                    , {templet: '#oper-col', title: '操作'}
+                ]]
+            });
+
+            /* 操作列按钮点击事件 */
+            table.on('tool(departmentTable)', function (obj) {
+                var data = obj.data;
+                var layEvent = obj.event;
+
+                if (layEvent === 'del') { /* 删除按钮 点击事件*/
+                    removeDepartmentFunc(data.id);
+                } else if (layEvent === 'edit') {/* 编辑按钮点击事件 */
+                    editDepartmentFunc(data.id);
+                }
+            });
+
+            /* 监听用户状态切换 */
+            form.on('switch(switchStatus)', function (data) {
+                var id = $(data.elem).attr("data-id");
+                var switchStatusInfo = data.elem.checked ? 1 : 0;
+                $.get("${domain}/department/updateStatus", {
+                    "id": id,
+                    "status": switchStatusInfo
+                }, function (res, status) {
+                    if (res.code != 200) {
+                        top.window.layer.alert('切换状态失败：' + res.msg, {
+                            icon: 5, yes: function () {
+                                $(data.elem).prop('checked', data.elem.checked ? '' : 'checked');
+                                form.render();
+                                top.window.layer.closeAll();
+                            }
+                        });
+                    } else {
+                        top.window.layer.alert('切换状态成功', {icon: 1});
+                    }
+                });
+            });
+            /* 条件检索 */
+            //监听提交
+            form.on('submit(departmentTableSearch)', function (data) {
+                var name = $('#name').val();
+                var pname = $('#pname').val();
+                load(null, name, pname);
+            });
+
+        })
+
+    }
+
+    load(0, null, null);
+
+    var setting = {
+        view: {
+            selectedMulti: true,
+            showLine: true,
+            showIcon: true
+        },
+        data: {
+            simpleData: {enable: true},
+            keep: {parent: true}
+        },
+        callback: {
+            onClick: zTreeOnClick
+        }
+
+    };
+
+    function treeList() {
+        $.get("${domain}/department/listTree", function (data, status) {
+            var departmentTree = $.fn.zTree.init($("#departmentTree"), setting, data.data);
+            var node = departmentTree.getNodes()[0];
+            departmentTree.selectNode(node);
+            setting.callback.onClick(null, departmentTree.setting.treeId, node);
+        });
+    }
+
+    treeList();
+
+    function zTreeOnClick(event, treeId, treeNode) {
+        pid = treeNode.id;
+        //alert(pid);
+        load(pid);
+    }
+
+    $(document).on('click', '#add', function () {
+        top.window.layer.open({
+            skin: 'layui-layer-lan'
+            , title: "新增部门"
+            , type: 2
+            , area: [(top.window.innerWidth * 0.45).toString(), (top.window.innerHeight * 0.75).toString()]
+            , content: "${domain}/department/departmentAddUI"
+        });
+    });
+
+    function removeDepartmentFunc(id) {
+        top.window.layer.alert('您确定删除该部门吗？', {
+            skin: 'layui-layer-lan' //样式类名
+            , closeBtn: 0
+            , btn: ['确定', '取消']
+        }, function () {
+            $.post("${domain}/department/remove", {id: id}, function (data, status) {
+                if (data.code != 200) {
+                    top.window.layer.alert('删除部门失败:' + data.msg, {icon: 5})
+                } else {
+                    top.window.layer.alert('删除部门成功', {
+                        icon: 1, yes: function (index, layero) {
+                            table.reload('departmentTable');
+                            /* 关闭弹框 */
+                            top.window.layer.closeAll();
+                            treeList();
+                        }
+                    })
+                }
+            });
+        });
+    }
+
+    function editDepartmentFunc(id) {
+        top.window.layer.open({
+            skin: 'layui-layer-lan'
+            , title: "修改数据"
+            , type: 2
+            , area: [(top.window.innerWidth * 0.45).toString(), (top.window.innerHeight * 0.75).toString()]
+            , content: "${domain}/department/editDepartmentUI?id=" + id
+        });
+    }
+</script>
+</body>
+</html>

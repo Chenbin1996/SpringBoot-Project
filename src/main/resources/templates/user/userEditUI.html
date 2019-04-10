@@ -1,0 +1,228 @@
+<#import "/base/baseUrl.html" as baseUrl>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>修改数据</title>
+    <!-- 页面通用jsCSS -->
+    <#include "/base/baseJs.html"/>
+</head>
+<body>
+<div class="er-content">
+    <fieldset class="layui-elem-field layui-field-title" style="">
+        <legend>修改用户信息</legend>
+    </fieldset>
+    <form class="layui-form layui-form-pane" action="" id="form">
+        <input type="text" name="id" value="${user.id}" lay-verify="id" autocomplete="off" class="layui-input" style="display: none">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">用户名</label>
+                <div class="layui-input-block">
+                    <input type="text" id="name" name="name" value="${user.name!}" required  lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">登陆账户</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="loginName" value="${user.loginName!}" required  lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">手机号</label>
+            <div class="layui-input-block">
+                <input type="text" name="phoneNumber" value="${user.phoneNumber!}" lay-verify="phoneNumber" autocomplete="off" placeholder="请输入手机号码"
+                       class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">选择角色</label>
+            <div class="layui-input-block">
+                <select  lay-filter="selectRole" id="selectRoleSelect" lay-search="">
+                    <option value="">选择角色</option>
+                    <#list roles as roleItem>
+                    <option value="${roleItem.id}_${roleItem.name}">${roleItem.name}</option>
+                    </#list>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">选择部门</label>
+            <div class="layui-input-block">
+                <select  lay-filter="selectDepartment" id="selectDepartment" lay-search="">
+                    <option value="">选择角色</option>
+                    <#list departments as department>
+                        <option value="${department.id}_${department.name}">${department.name}</option>
+                    </#list>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">用户角色</label>
+            <div class="layui-input-block" id="rolesdiv" style="border: 1px solid #e5e1e1">
+                <#list roles as roleItem>
+                        <#list userRoles as userRole>
+                            <#if roleItem.name == userRole.name>
+                                <input type="checkbox" name="roleId" title="${userRole.name}" value="${userRole.id}" lay-filter="clickRole" checked>
+                            </#if>
+                        </#list>
+                </#list>
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">用户部门</label>
+            <div class="layui-input-block" id="departmentsdiv" style="border: 1px solid #e5e1e1">
+                <#list departments as department>
+                    <#list userDepartments as userDepartment>
+                        <#if department.name == userDepartment.name>
+                            <input type="checkbox" name="departmentId" title="${userDepartment.name}" value="${userDepartment.id}" lay-filter="clickDepartment" checked>
+                        </#if>
+                    </#list>
+                </#list>
+            </div>
+        </div>
+        <div class="er-btn-div">
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="fromSubmit">保存</button>
+            <button type="button" class="layui-btn layui-btn-primary" onclick="top.window.layer.closeAll()">取消</button>
+        </div>
+    </form>
+
+</div>
+
+<script type="text/javascript">
+    layui.use(['form', 'table', 'laydate'], function () {
+        var form = layui.form
+            , layer = layui.layer
+            , table = layui.table;
+        //表单自定义验证规则
+        form.verify({
+            name: function (value) {
+                if (value.length < 1) {
+                    return '请输入用户名!';
+                }
+            },
+            loginName: function (value) {
+                if (value.length < 1) {
+                    return '请输入登录名!';
+                }
+            },
+            phoneNumber:function (value) {
+                if (value.length >= 1) {
+                    if(!(/^1(3|4|5|7|8)\d{9}$/.test(value))){
+                        return '请输入正确的手机号！';
+                    }
+                }
+            },
+            emailP:function (value) {
+                if (value.length >= 1) {
+                    var reg = /^([a-zA-Z]|[0-9])(\w|\-)+@[a-zA-Z0-9]+\.([a-zA-Z]{2,4})$/;
+                    if(!reg.test(value)){
+                        return '请输入正确的邮箱地址！';
+                    }
+                }
+            }
+        });
+
+        form.on('checkbox(clickRole)', function(data){
+            /* 删除当前元素 */
+            data.othis.prev().remove();
+            data.othis.remove();
+            form.render("checkbox");
+        });
+
+        form.on('checkbox(clickDepartment)', function(data){
+            /* 删除当前元素 */
+            data.othis.prev().remove();
+            data.othis.remove();
+            form.render("checkbox");
+        });
+
+        form.on('select(selectRole)', function (data){
+            var selectValue = data.value;
+            var roleId = selectValue.split('_')[0];
+            var roleName = selectValue.split('_')[1];
+            var flag = true;
+            $("#rolesdiv input[name='roleId']").each(function () {
+                if (this.value == roleId) {
+                    flag=false;
+                    Layer.warn("用户已拥有该角色，请勿重复分配！")
+                }
+            });
+            $("#selectRoleSelect").val("");
+            /* 判断是否已经分配过该角色 */
+            if(flag){
+                var checkHtml = "<input type=\"checkbox\" name=\"roleId\" title=\""+roleName+"\" value='"+roleId+"' lay-filter=\"clickRole\" checked>";
+                $("#rolesdiv").append(checkHtml);
+                form.render("checkbox");
+            }
+            form.render("select");
+        });
+
+        form.on('select(selectDepartment)', function (data){
+            var selectValue = data.value;
+            var departmentId = selectValue.split('_')[0];
+            var departmentName = selectValue.split('_')[1];
+            var flag = true;
+            $("#departmentsdiv input[name='departmentId']").each(function () {
+                if (this.value == departmentId) {
+                    flag=false;
+                    Layer.warn("用户已拥有该部门，请勿重复分配！")
+                }
+            });
+            $("#selectDepartment").val("");
+            /* 判断是否已经分配过该角色 */
+            if(flag){
+                var checkHtml = "<input type=\"checkbox\" name=\"departmentId\" title=\""+departmentName+"\" value='"+departmentId+"' lay-filter=\"clickDepartment\" checked>";
+                $("#departmentsdiv").append(checkHtml);
+                form.render("checkbox");
+            }
+            form.render("select");
+        });
+
+        //监听提交
+        form.on('submit(fromSubmit)', function (data) {
+            /* 加载层 */
+            top.window.layer.load(2);
+            $.post("${domain}/user/update", withFormCheckUserRoleId(data), function (data, status) {
+                if (data.code != 200) {
+                    top.window.layer.alert('修改用户失败'+data.msg, {icon: 5});
+                } else {
+                    top.window.layer.alert('修改用户成功', {
+                        icon: 1, yes: function (index, layero) {
+                            $.reloadParentDom();
+                            /* 关闭弹框 */
+                            top.window.layer.closeAll();
+                        }
+                    })
+                }
+            });
+            return false;
+        });
+        /* 权限菜单列表 */
+
+    });
+
+    /**
+     * 拼接参数 获取用户角色数组拼接到表单数据并返回
+     * @param data 表单数据对象
+     * */
+    function withFormCheckUserRoleId(data) {
+
+        var roleId = [];
+        var departmentId = [];
+        /* 获取角色id */
+        $("#rolesdiv input[name='roleId']").each(function () {
+            roleId.push(this.value);
+        });
+        $("#departmentsdiv input[name='departmentId']").each(function () {
+            departmentId.push(this.value);
+        });
+        var formData = data.field;
+        formData.roleId = roleId.join(',');
+        formData.departmentId = departmentId.join(',');
+        return formData;
+    }
+
+
+</script>
+</body>
+</html>

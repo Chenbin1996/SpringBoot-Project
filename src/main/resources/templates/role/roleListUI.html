@@ -1,0 +1,211 @@
+<#import "/base/baseUrl.html" as baseUrl>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- 页面通用jsCSS -->
+    <#include "/base/baseJs.html"/>
+</head>
+<body>
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">角色名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="name" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">角色状态</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="status" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">权限备注</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="phoneNumber" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn layuiadmin-btn-useradmin" lay-submit lay-filter="roleTableSearch">
+                        <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="layui-card-body">
+            <div style="padding-bottom: 10px;">
+                <button class="layui-btn layuiadmin-btn-useradmin" data-type="batchdel">删除</button>
+                <button class="layui-btn layuiadmin-btn-useradmin" data-type="add">添加</button>
+            </div>
+
+            <table id="roleTable" lay-filter="roleTable" class="layui-hide"></table>
+        </div>
+    </div>
+</div>
+<!-- 操作列 -->
+<script type="text/html" id="oper-col">
+    <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>
+</script>
+<script type="text/html" id="statusHandel">
+    {{#  if(d.status == '1'){ }}
+    <input type="checkbox" data-id ="{{d.id}}" lay-filter="switchStatus"  name="roleStatus" checked lay-skin="switch" lay-text="正常|失效">
+    {{# }else{  }}
+    <input type="checkbox" data-id ="{{d.id}}" lay-filter="switchStatus" name="roleStatus" lay-skin="switch" lay-text="正常|失效">
+    {{# } }}
+</script>
+<script>
+    layui.use(['table','form'], function(){
+        var table = layui.table;
+        var form = layui.form;
+        table.render({
+            elem: '#roleTable'
+            ,url:'${domain}/role/list'
+            ,response: {
+                statusCode: 200 //规定成功的状态码，默认：0
+            }
+            ,request: {
+                pageName: 'pageNumber' //页码的参数名称，默认：page
+                ,limitName: 'pageSize' //每页数据量的参数名，默认：limit
+            }
+            ,parseData: function(res){ //res 即为原始返回的数据
+                return {
+                    "code": res.code, //解析接口状态
+                    "msg": res.msg, //解析提示文本
+                    "count": res.data.total, //解析数据长度
+                    "data": res.data.records //解析数据列表
+                };
+            }
+            ,cols: [[
+                {type:'checkbox'}
+                ,{type: 'numbers'}
+                ,{field:'name',  title: '角色名'}
+                ,{field:'remark',  title: '权限备注'}
+                ,{field:'createTime',  title: '创建时间',templet:function (item) {
+                            return $.formatDate(item.createTime,"yyyy-MM-dd HH:mm") ;
+                        }}
+                ,{field:'statusName',  title: '角色状态', toolbar:"#statusHandel"}
+                ,{templet: '#oper-col', title: '操作'}
+            ]]
+            ,page: true
+        });
+        /* 操作列按钮点击事件 */
+        table.on('tool(roleTable)', function (obj) {
+            var data = obj.data;
+            var layEvent = obj.event;
+
+            if (layEvent === 'del') { /* 删除按钮 点击事件*/
+                removeRoleFunc(data.id);
+            } else if (layEvent === 'edit') {/* 编辑按钮点击事件 */
+                editRoleFunc(data.id);
+            }
+        });
+
+        form.on('submit(roleTableSearch)', function (data) {
+            var field = data.field;
+            //执行重载
+            table.reload('roleTable', {
+                where: field
+            });
+        });
+
+        /* 监听用户状态切换 */
+        form.on('switch(switchStatus)', function (data) {
+            var roleId = $(data.elem).attr("data-id");
+            var switchStatusInfo = data.elem.checked ? 1 : 0;
+            $.get("${domain}/role/updateStatus", {"id":roleId,"status":switchStatusInfo}, function (res, status) {
+                if (res.code != 200) {
+                    top.window.layer.alert('切换状态失败：' + res.msg, {icon: 5,yes:function () {
+                            $(data.elem).prop('checked',data.elem.checked?'':'checked');
+                            form.render();
+                            top.window.layer.closeAll();
+                        }
+                    });
+                } else {
+                    top.window.layer.alert('切换状态成功', {icon: 1});
+                }
+            });
+        });
+        /* 切换状态 */
+        function switchStatus(dom,id,nowStatus){
+            console.log(id+nowStatus)
+        }
+
+        //按钮点击事件
+        var active = {
+            batchdel:function(){
+                var checkStatus = table.checkStatus('roleTable')
+                    ,data = checkStatus.data;
+              // layer.alert(JSON.stringify(data));
+               var datas=new Array();
+               for(var i=0;i<data.length;i++){
+                   datas.push(data[i].id);
+               }
+               removeRoleFunc(datas.join(','));
+            },
+            add: function(){
+                top.window.layer.open({
+                    skin: 'layui-layer-lan'
+                    ,title:"新增角色"
+                    ,type: 2
+                    ,area: [(top.window.innerWidth*0.45).toString(), (top.window.innerHeight*0.70).toString()]
+                    ,content:"${domain}/role/addRoleList"
+                });
+            }
+        };
+        /* 绑定点击事件 */
+        $('.layui-btn.layuiadmin-btn-useradmin').on('click', function(){
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+        /* 条件检索 */
+        //监听提交
+        form.on('submit(roleTableSearch)', function (data) {
+            var field = data.field;
+            //执行重载
+            table.reload('roleTable', {
+                where: field
+            });
+        });
+
+    });
+    function removeRoleFunc(ids) {
+        top.window.layer.alert('您确定删除该用户吗？', {
+            skin: 'layui-layer-lan' //样式类名
+            ,closeBtn: 0
+            ,btn:['确定','取消']
+        }, function(){
+            $.post("${domain}/role/removeRole",{ids:ids},function (data,status) {
+                if(data.code!=200){
+                    top.window.layer.alert('删除用户失败 : '+data.msg, {icon: 5})
+                }else {
+                    top.window.layer.alert('删除用户成功', {
+                        icon: 1, yes: function (index, layero) {
+                            $.reloadParentDom();
+                            /* 关闭弹框 */
+                            top.window.layer.closeAll();
+                        }
+                    })
+                }
+            });
+        });
+    }
+
+    function editRoleFunc(id) {
+        top.window.layer.open({
+            skin: 'layui-layer-lan'
+            ,title:"修改数据"
+            ,type: 2
+            ,area: [(top.window.innerWidth*0.45).toString(), (top.window.innerHeight*0.75).toString()]
+            ,content:"${domain}/role/editRoleUI?id="+id
+        });
+    }
+</script>
+</body>
+</html>

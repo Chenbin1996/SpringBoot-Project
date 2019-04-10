@@ -1,0 +1,121 @@
+<#import "/base/baseUrl.html" as baseUrl>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>修改菜单</title>
+    <!-- 页面通用jsCSS -->
+    <#include "/base/baseJs.html"/>
+    <script src="<@baseUrl.static />/layui/layui.js"></script>
+</head>
+<body>
+<div class="er-content">
+    <fieldset class="layui-elem-field layui-field-title" style="">
+        <legend>修改功能菜单</legend>
+    </fieldset>
+    <form class="layui-form layui-form-pane" action="" id="form">
+        <input type="text" name="id" value="${menu.id}" lay-verify="id" autocomplete="off" class="layui-input" style="display: none">
+        <div class="layui-form-item">
+            <label class="layui-form-label">菜单标题</label>
+            <div class="layui-input-block">
+
+                <input type="text" name="name" value="${menu.name}" lay-verify="title" autocomplete="off" placeholder="请输入标题"
+                       class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">菜单路径</label>
+                <div class="layui-input-block">
+                    <input type="text" id="path" name="path" value="${menu.path!}" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">菜单图标</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="icon" value="${menu.icon!}" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">父级菜单</label>
+                <div class="layui-input-inline">
+                    <select name="pid" lay-search="">
+                        <#if (menu.pid!) !='' && (menu.parentName!) !=''>
+                            <option value="${menu.pid}">${menu.parentName}</option>
+                        </#if>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">是否叶子</label>
+            <div class="layui-input-block">
+                <input type="checkbox" name="boolIsleaf" lay-skin="switch" lay-filter="switchTest" <#if menu.boolIsleaf >checked=""</#if> lay-text="ON|OFF">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-block">
+                <textarea placeholder="请输入内容" name="remark" class="layui-textarea">${menu.remark}</textarea>
+            </div>
+        </div>
+        <div class="er-btn-div">
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="fromSubmit">保存</button>
+            <button type="button" class="layui-btn layui-btn-primary" onclick="top.window.layer.closeAll()">取消</button>
+        </div>
+    </form>
+
+</div>
+
+<script type="text/javascript">
+    layui.use(['form', 'layedit', 'laydate'], function () {
+        var form = layui.form
+            , layer = layui.layer;
+        //自定义验证规则
+        form.verify({
+            title: function (value) {
+                if (value.length < 1) {
+                    return '请输入菜单标题!';
+                }
+            }
+        });
+        //监听指定开关
+        form.on('switch(switchTest)', function(data){
+            /*layer.msg('开关checked：'+ (this.checked ? 'true' : 'false'), {
+                offset: '6px'
+            });*/
+            if(this.checked){
+                $("#path").attr("lay-verify","required")
+            }else {
+                $("#path").removeAttr("lay-verify")
+            }
+
+        });
+        //监听提交
+        form.on('submit(fromSubmit)', function (data) {
+            /* 加载层 */
+            top.window.layer.load(2);
+            $.post("${domain}/menu/editMenuHandel", data.field, function (data, status) {
+                if (data.code != 200) {
+                    top.window.layer.alert('修改菜单失败'+data.message, {icon: 5});
+                } else {
+                    top.window.layer.alert('修改菜单成功', {
+                        icon: 1, yes: function (index, layero) {
+                            $.reloadParentDom();
+                            /* 关闭弹框 */
+                            top.window.layer.closeAll();
+                        }
+                    })
+                }
+            });
+
+
+            return false;
+        });
+
+    });
+
+</script>
+</body>
+</html>
