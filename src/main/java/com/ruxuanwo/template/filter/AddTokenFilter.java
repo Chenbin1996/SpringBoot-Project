@@ -84,6 +84,22 @@ public class AddTokenFilter implements Filter {
                 cookie.setPath("/");
                 cookie.setMaxAge(60);
                 cookies = new Cookie[]{cookie};
+            } else {
+                boolean isToken = false;
+                for (Cookie cookie : cookies) {
+                    if (Constant.HTTP_HEADER_ACCESS_TOKEN.equals(cookie.getName())){
+                        isToken = true;
+                        break;
+                    }
+                }
+                if (!isToken){
+                    List<Cookie> cookieList = new ArrayList<>(Arrays.asList(cookies));
+                    Cookie cookie = new Cookie(Constant.HTTP_HEADER_ACCESS_TOKEN, DEFAULT_TOKEN);
+                    cookie.setPath("/");
+                    cookie.setMaxAge(60);
+                    cookieList.add(cookie);
+                    return cookieList.toArray(new Cookie[cookieList.size()]);
+                }
             }
             return cookies;
         }
