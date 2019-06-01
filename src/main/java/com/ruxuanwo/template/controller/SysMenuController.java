@@ -62,7 +62,7 @@ public class SysMenuController {
     @ResponseBody
     @PostMapping("/editMenuHandel")
     public Result editMenuHandel(@RequestParam("id") String id,
-                                 @RequestParam(value = "title") String name,
+                                 @RequestParam(value = "name") String name,
                                  @RequestParam(value = "path", required = false) String path,
                                  @RequestParam(value = "icon", required = false) String icon,
                                  @RequestParam(value = "pid", required = false) String pid,
