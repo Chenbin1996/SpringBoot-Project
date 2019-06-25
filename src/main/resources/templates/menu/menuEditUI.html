@@ -97,8 +97,14 @@
             /* 加载层 */
             top.window.layer.load(2);
             $.post("${domain}/menu/editMenuHandel", data.field, function (data, status) {
-                if (data.code != 200) {
-                    top.window.layer.alert('修改菜单失败'+data.message, {icon: 5});
+                 if (data.code != 200) {
+                    top.window.layer.alert('修改菜单失败'+data.message, {icon: 5, yes: function (index, layero) {
+
+                            /* 关闭弹框 */
+                            top.window.layer.closeAll();
+                        }});
+                    /* 关闭弹框 */
+                    top.window.layer.closeAll();
                 } else {
                     top.window.layer.alert('修改菜单成功', {
                         icon: 1, yes: function (index, layero) {
