@@ -43,9 +43,33 @@ public class DruidDBConfig {
         filterRegistrationBean.addUrlPatterns("/*");
         return filterRegistrationBean;
     }
+   //配置数据源
+    @Bean(name="dataSource")
+    @ConfigurationProperties(prefix="spring.datasource")
+    public DataSource dataSource(){
+        return new DruidDataSource();
+    }
+
     // 配置事物管理器
-    @Bean(name="transactionManager")
-    public DataSourceTransactionManager transactionManager(){
-        return new DataSourceTransactionManager(new DruidDataSource());
+    @Bean
+    public DataSourceTransactionManager transactionManager() {
+        log.info("初始化DataSourceTransactionManager");
+        return new DataSourceTransactionManager(dataSource());
+    }
+
+    @Bean
+    public WallFilter wallFilter(){
+        WallFilter wallFilter = new WallFilter();
+        wallFilter.setConfig(wallConfig());
+        return wallFilter;
+    }
+
+    @Bean
+    public WallConfig wallConfig(){
+        WallConfig wallConfig = new WallConfig();
+        wallConfig.setMultiStatementAllow(true);//允许一次执行多条语句
+        wallConfig.setNoneBaseStatementAllow(true);//是否允许非以上基本语句的其他语句
+        wallConfig.setStrictSyntaxCheck(false);//是否进行严格的语法检测
+        return wallConfig;
     }
 }
