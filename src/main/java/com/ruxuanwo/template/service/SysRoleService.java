@@ -25,12 +25,12 @@ public interface SysRoleService extends BaseService<SysRole> {
     /**
      * 表单数据接口，所有的List数据都将是这个接口传输出去
      *
-     * @param page
+     * @param
      * @param status 角色状态
      * @param name   角色名
      * @param remark 备注
      * @return
      */
-    IPage<SysRoleDTO> list(Page<SysRoleDTO> page, Integer status, String name, String remark);
+    List<SysRoleDTO> list(Integer status, String name, String remark);
 
 }

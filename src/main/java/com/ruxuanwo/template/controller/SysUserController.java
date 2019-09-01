@@ -3,6 +3,8 @@ package com.ruxuanwo.template.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.ruxuanwo.template.constant.Constant;
 import com.ruxuanwo.template.domain.*;
 import com.ruxuanwo.template.dto.Result;
@@ -221,8 +223,10 @@ public class SysUserController {
         user.setPhoneNumber(phoneNumber);
         user.setEmail(eMail);
         user.setStatus(status);
-        IPage userPage = userService.selectUserList(new Page(currentPage, pageSize), user);
-        return ResultUtil.success(userPage);
+        PageHelper.startPage(currentPage, pageSize);
+        List<SysUser> users = userService.find(user);
+        PageInfo<SysUser> pageInfo = new PageInfo<>(users);
+        return ResultUtil.success(pageInfo);
     }
 
     /**

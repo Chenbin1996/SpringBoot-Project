@@ -3,6 +3,8 @@ package com.ruxuanwo.template.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.ruxuanwo.template.constant.Constant;
 import com.ruxuanwo.template.domain.SysRoleMenu;
 import com.ruxuanwo.template.dto.Result;
@@ -138,8 +140,10 @@ public class SysRoleMenuController {
         if (StringUtils.isNotEmpty(menuId)) {
             tRoleMenuRelation.setMenuId(menuId);
         }
-        IPage<SysRoleMenu> page = roleMenuService.findPage(new Page<>(pageNum, pageSize), tRoleMenuRelation);
-        return ResultUtil.success(page);
+        PageHelper.startPage(pageNum, pageSize);
+        List<SysRoleMenu> page = roleMenuService.find(tRoleMenuRelation);
+        PageInfo<SysRoleMenu> pageInfo = new PageInfo<>(page);
+        return ResultUtil.success(pageInfo);
     }
 
     /**

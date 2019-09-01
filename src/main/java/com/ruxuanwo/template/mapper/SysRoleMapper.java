@@ -24,9 +24,8 @@ public interface SysRoleMapper extends BaseMapper<SysRole> {
 
     /**
      * 分页数据
-     * @param page
      * @param params
      * @return
      */
-    List<SysRoleDTO> list(Page<SysRoleDTO> page, @Param("params") Map<String, Object> params);
+    List<SysRoleDTO> list(@Param("params") Map<String, Object> params);
 }

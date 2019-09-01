@@ -2,6 +2,8 @@ package com.ruxuanwo.template.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.ruxuanwo.template.constant.Constant;
 import com.ruxuanwo.template.domain.SysDepartment;
 import com.ruxuanwo.template.domain.SysUser;
@@ -137,8 +139,10 @@ public class SysDepartmentController {
                               @RequestParam(name = "pname", required = false) String pname,
                               @RequestParam(name = "currentPage", defaultValue = Constant.PAGE, required = false) Integer currentPage,
                               @RequestParam(name = "pageSize", defaultValue = Constant.SIZE, required = false) Integer pageSize) {
-        IPage<SysDepartmentDTO> sysDepartmentDTOS = departmentService.selectByPid(new Page<SysDepartmentDTO>(currentPage, pageSize), pid, name, pname);
-        return ResultUtil.success(sysDepartmentDTOS);
+        PageHelper.startPage(currentPage, pageSize);
+        List<SysDepartmentDTO> sysDepartmentDTOS = departmentService.selectByPid(pid, name, pname);
+        PageInfo<SysDepartmentDTO> pageInfo = new PageInfo<>(sysDepartmentDTOS);
+        return ResultUtil.success(pageInfo);
     }
 
     /**

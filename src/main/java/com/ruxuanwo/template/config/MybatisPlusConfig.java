@@ -29,10 +29,6 @@ public class MybatisPlusConfig {
     @Bean
     public PaginationInterceptor paginationInterceptor() {
         PaginationInterceptor page = new PaginationInterceptor();
-        List<ISqlParser> sqlParserList = new ArrayList<>();
-        // 攻击 SQL 阻断解析器、加入解析链 阻止恶意的全表更新删除
-//        sqlParserList.add(new BlockAttackSqlParser());
-//        page.setSqlParserList(sqlParserList);
         page.setDialectType("mysql");
         return page;
     }

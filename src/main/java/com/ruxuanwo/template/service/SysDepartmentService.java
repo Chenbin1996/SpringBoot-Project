@@ -17,7 +17,7 @@ public interface SysDepartmentService extends BaseService<SysDepartment> {
 
     List<TreeNode> listTree();
 
-    IPage<SysDepartmentDTO> selectByPid(IPage page, String pid, String name, String pname);
+    List<SysDepartmentDTO> selectByPid(String pid, String name, String pname);
 
     List<SysDepartment> findByUserId(String userId);
 

@@ -20,7 +20,7 @@ public interface SysDepartmentMapper extends BaseMapper<SysDepartment> {
 
     List<TreeNode> listTree();
 
-    IPage<SysDepartmentDTO> selectByPid(IPage page, @Param("map") Map map);
+    List<SysDepartmentDTO> selectByPid(@Param("map") Map map);
 
     List<SysDepartment> findByUserId(String userId);
 

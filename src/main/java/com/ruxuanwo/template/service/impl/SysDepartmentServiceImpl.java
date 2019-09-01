@@ -28,12 +28,12 @@ public class SysDepartmentServiceImpl extends BaseServiceImpl<SysDepartmentMappe
     }
 
     @Override
-    public IPage<SysDepartmentDTO> selectByPid(IPage page, String pid, String name, String pname) {
+    public List<SysDepartmentDTO> selectByPid(String pid, String name, String pname) {
         HashMap<String, Object> map = new HashMap<>();
         map.put("pid",pid);
         map.put("name",name);
         map.put("pname",pname);
-        return mapper.selectByPid(page,map);
+        return mapper.selectByPid(map);
     }
 
     @Override

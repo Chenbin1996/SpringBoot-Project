@@ -3,6 +3,8 @@ package com.ruxuanwo.template.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.ruxuanwo.template.constant.Constant;
 import com.ruxuanwo.template.domain.SysRole;
 import com.ruxuanwo.template.dto.Result;
@@ -159,9 +161,10 @@ public class SysRoleController {
             @RequestParam(name = "currentPage", required = false, defaultValue = Constant.PAGE) Integer currentPage,
             @RequestParam(name = "pageSize", required = false, defaultValue = Constant.SIZE) Integer pageSize
     ) {
-
-        IPage<SysRoleDTO> rolePage = roleService.list(new Page<>(currentPage, pageSize), status, name, remark);
-        return ResultUtil.success(rolePage);
+        PageHelper.startPage(currentPage, pageSize);
+        List<SysRoleDTO> rolePage = roleService.list(status, name, remark);
+        PageInfo<SysRoleDTO> pageInfo = new PageInfo<>(rolePage);
+        return ResultUtil.success(pageInfo);
     }
 
     /**

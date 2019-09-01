@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.ruxuanwo.template.domain.SysUserRole;
 import com.ruxuanwo.template.dto.Result;
 import com.ruxuanwo.template.service.SysUserRoleService;
@@ -119,17 +121,20 @@ public class SysUserRoleController {
             @RequestParam(name = "pageNum", required = true) Integer pageNum,
             @RequestParam(name = "pageSize", required = true) Integer pageSize
     ) {
-        IPage<SysUserRole> tUserRoleRelationIPage;
+        List<SysUserRole> tUserRoleRelationIPage;
         try {
             if (userId == null) {
-                tUserRoleRelationIPage = userRoleService.page(new Page<>(pageNum, pageSize), null);
+                PageHelper.startPage(pageNum, pageSize);
+                tUserRoleRelationIPage = userRoleService.list();
             } else {
                 /*构造查询条件*/
                 Wrapper<SysUserRole> wrapper = new QueryWrapper<>();
                 ((QueryWrapper<SysUserRole>) wrapper).eq("user_id", userId);
-                tUserRoleRelationIPage = userRoleService.page(new Page<>(pageNum, pageSize), wrapper);
+                PageHelper.startPage(pageNum, pageSize);
+                tUserRoleRelationIPage = userRoleService.list(wrapper);
             }
-            return ResultUtil.success(tUserRoleRelationIPage);
+            PageInfo<SysUserRole> pageInfo = new PageInfo<>(tUserRoleRelationIPage);
+            return ResultUtil.success(pageInfo);
         } catch (Exception e) {
             e.printStackTrace();
             return ResultUtil.error("未知错误查询数据失败");

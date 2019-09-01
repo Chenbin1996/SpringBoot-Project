@@ -33,11 +33,11 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleMapper, SysRole> 
     }
 
     @Override
-    public IPage<SysRoleDTO> list(Page<SysRoleDTO> page, Integer status, String name, String remark) {
+    public List<SysRoleDTO> list(Integer status, String name, String remark) {
         Map<String, Object> params = new HashMap<>(16);
         params.put("status", status);
         params.put("name", name);
         params.put("remark", remark);
-        return page.setRecords(mapper.list(page, params));
+        return mapper.list(params);
     }
 }
